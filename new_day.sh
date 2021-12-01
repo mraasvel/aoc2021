@@ -15,6 +15,5 @@ then
 fi
 
 echo "Creating $DIR using base template"
-mkdir -p $DIR
-cp -r ./base/* $DIR
+cp -r "./base" $DIR
 cp "./getinput.sh" $DIR
