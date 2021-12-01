@@ -1,6 +1,7 @@
 # Other
 .DS_Store
 *.DSYM/
+.vscode
 
 # Prerequisites
 *.d
