@@ -13,19 +13,12 @@
 
 using namespace std;
 
-void Line(const std::string& line, size_t index) {
-
-}
-
 int main() {
 
 	std::ifstream file(FILENAME);
 	assert(file.is_open());
 	std::string line;
-	size_t i = 0;
 	while (std::getline(file, line)) {
-		Line(line, i);
-		++i;
 	}
 	file.close();
 

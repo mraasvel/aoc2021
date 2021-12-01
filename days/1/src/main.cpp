@@ -10,6 +10,7 @@
 
 #define FILENAME "input.txt"
 // #define FILENAME "sample.txt"
+
 using namespace std;
 
 int main() {
@@ -23,21 +24,15 @@ int main() {
 	}
 	file.close();
 
-
 	int cnt = 0;
-	int sum = 0;
-	sum = v[0] + v[1] + v[2];
+	int sum = v[0] + v[1] + v[2];
 	for (size_t i = 3; i < v.size(); ++i) {
-
-		sum -= v[i - 3];
-
-		cout << sum + v[i] << ", " << sum + v[i - 3] << endl;
-		if (sum + v[i] > sum + v[i - 3]) {
+		int next = sum - v[i - 3] + v[i];
+		if (next > sum) {
 			++cnt;
 		}
-		sum += v[i];
+		sum += next;
 	}
-
 	cout << cnt << std::endl;
 	return 0;
 }
