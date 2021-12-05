@@ -52,14 +52,17 @@ public:
 		vector<Point> v;
 
 		if (a.x == b.x) {
+			// horizontal
 			for (int y = min(a.y, b.y); y <= max(a.y, b.y); ++y) {
 				v.push_back(Point(a.x, y));
 			}
 		} else if (a.y == b.y) {
+			// vertical
 			for (int x = min(a.x, b.x); x <= max(a.x, b.x); ++x) {
 				v.push_back(Point(x, a.y));
 			}
 		} else {
+			// diagonal lines
 			Point p = a;
 			while (p != b) {
 				int x = a.x < b.x ? 1 : -1;
@@ -95,14 +98,12 @@ int main() {
 		Point a(stoi(v[0]), stoi(v[0].substr(v[0].find(',') + 1)));
 		Point b(stoi(v[2]), stoi(v[2].substr(v[2].find(',') + 1)));
 		lines.push_back(Line(a, b));
-
-		MAX_X = max(MAX_X, max(a.x, b.x));
-		MAX_Y = max(MAX_Y, max(a.y, b.y));
 	}
 	file.close();
 
 	int total = 0;
 	for (const Line& line: lines) {
+		// just generate each point on every linen and put it into a map of points to counts
 		auto v = line.getPoints();
 		for (auto point : v) {
 			if (counted.count(point) > 0) {
