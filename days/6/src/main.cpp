@@ -6,16 +6,18 @@
 #include <cstdio>
 #include <vector>
 #include <algorithm>
+#include <set>
 #include <unordered_map>
+#include <map>
 
-// #define FILENAME "input.txt"
-#define FILENAME "sample.txt"
+#define FILENAME "input.txt"
+// #define FILENAME "sample.txt"
 
 using namespace std;
 
 struct Fish {
 
-	Fish(size_t time = 8) : timer(time) {}
+	Fish(size_t time = 8) : timer(time), num_fish(1) {}
 
 	// return true if new fish should be created
 	bool increment() {
@@ -29,77 +31,106 @@ struct Fish {
 	}
 
 	size_t timer;
+	size_t num_fish;
 };
 
-#define DAYS 20
+#define DAYS 256
 
 /*
-Start: 8
-	create a new fish after 9 days
-
-Start: 3
-
-on the 4th day (start + 1), it creates a new fish with timer 8
-Then after another 7 days it creates a new fish with timer 8
-2
-1
-0
-6 + create
-
-6
-5
-4
-3
-2
-1
-0
-6 = create
-
-So one fish creates (days - start - 1) / 7
-Each of which create (days - start - 1) / 7 from the time they are created
-For each fish: have a new start day
+1. Decremting: we want to change the number to the key [key - 1]: however if this key is already taken and not processed yet, it should be processed first before we replace the value
+2. 
 */
-size_t calculateTotalFish(size_t start, size_t days) {
-	if (days >= start + 1) {
-		size_t numfish = days - start - 1 / 7;
-		size_t total = 2 + numfish;
-		for (size_t i = 0; i < numfish; ++i) {
-			total += calculateTotalFish()
+struct Fishies {
+	typedef map<int, size_t> map_type;
+	// typedef unordered_map<int, size_t> map_type;
+	Fishies() : total(0) {}
+
+	void add(const Fish& fish) {
+		auto it = m.find(fish.timer);
+		if (it == m.end()) {
+			m[fish.timer] = 1;
+		} else {
+			m[fish.timer] += 1;
 		}
+		total += 1;
+	}
+
+	void print() {
+		for (auto f : m) {
+			cout << f.first << " (" << f.second << ") ";
+		}
+		cout << "Total: " << total << endl;
+	}
+
+	void execDay() {
+		size_t to_add = 0;
+		for (auto& it  : m) {
+			size_t num = it.second;
+			if (it.first == 0) {
+				to_add += num;
+				addNew(6, num);
+			} else {
+				addNew(it.first - 1, num);
+			}
+		}
+		addFishies(to_add);
+		m.clear();
+		new_map.swap(m);
+	}
+
+	void addNew(int time, size_t n) {
+		auto it = new_map.find(time);
+		if (it == new_map.end()) {
+			new_map[time] = n;
+		} else {
+			new_map[time] += n;
+		}
+	}
+
+	void addFishies(size_t n) {
+		if (n == 0) {
+			return;
+		}
+		addNew(8, n);
+		total += n;
+	}
+
+	size_t count() const {
+		// size_t total = 0;
+		// for (auto& f : m) {
+		// 	total += f.second;
+		// }
 		return total;
 	}
 
-	return 1;
-}
+	// map timer to number of fish;
+	map_type m;
+	map_type new_map;
+	size_t total;
+};
 
 int main() {
 
 	vector<Fish> fish;
+	Fishies fishies;
 
 	std::ifstream file(FILENAME);
 	assert(file.is_open());
 	std::string line;
 	while (std::getline(file, line)) {
 		auto v = util::splitString(line, ',');
-		for (auto f : v) {
-			fish.push_back(Fish(stoull(f)));
+		for (auto val : v) {
+			Fish fishy = Fish(stoull(val));
+			fishies.add(fishy);
 		}
 	}
 	file.close();
 
-	cout << "Calculation: " << calculateTotalFish(fish.front().timer, DAYS) << endl;
-
 	for (size_t i = 0; i < DAYS; ++i) {
-		size_t s = fish.size();
-		for (size_t j = 0; j < s; ++j) {
-			if (fish[j].increment()) {
-				fish.push_back(Fish(8));
-			}
-		}
-		cout << i << ": " << fish.size() << endl;
+		// fishies.print();
+		fishies.execDay();
+		// cout << i+ 1 << ": " << fishies.count() << endl;
 	}
-
-	cout << fish.size() << endl;
-
+	cout << fishies.count() << endl;
 	return 0;
 }

@@ -36,7 +36,7 @@ DFLAGS := -O0 -g3
 
 # Unused Flags
 UNUSED_FLAGS := -Wno-unused -Wno-unused-parameter
-CXXFLAGS += $(UNUSED_FLAGS)
+CXXFLAGS += $(UNUSED_FLAGS) -O3
 
 ifdef FSANITIZE
 	DFLAGS += -fsanitize=address
