@@ -50,6 +50,12 @@ ifdef DEBUG
 	LFLAGS += $(DFLAGS)
 endif
 
+ifndef FSANITIZE
+	ifndef DEBUG
+		CXXFLAGS += -O3
+	endif
+endif
+
 RM = /bin/rm -f
 
 # Rules
