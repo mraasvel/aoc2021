@@ -9,9 +9,9 @@
 #include <unordered_map>
 #include <map>
 
-// #define FILENAME "input.txt"
+#define FILENAME "input.txt"
 // #define FILENAME "sample.txt"
-#define FILENAME "sample2.txt"
+// #define FILENAME "sample2.txt"
 
 using namespace std;
 
@@ -32,6 +32,28 @@ f : bd
 d : a
 */
 
+vector<string> initAppearances() {
+	vector<int> a(255);
+
+	a['a'] = 8;
+	a['f'] = 8;
+	a['c'] = 7;
+	a['d'] = 7;
+	a['g'] = 7;
+	a['b'] = 6;
+	a['e'] = 4;
+
+	vector<string> b(10);
+	b[9] = "f";
+	b[8] = "ac";
+	b[7] = "dg";
+	b[6] = "b";
+	b[4] = "e";
+	return b;
+}
+
+vector<string> appearances = initAppearances();
+
 vector<string> signals = {
 	"abcefg",
 	"cf",
@@ -45,33 +67,39 @@ vector<string> signals = {
 	"abcdfg",
 };
 
+string intersectStrings(const string& a, const string& b) {
+	string result;
+	for (auto c : a) {
+		if (b.find(c) != std::string::npos) {
+			result.push_back(c);
+		}
+	}
+	return result;
+}
+
+string addStrings(const string& a, const string& b) {
+	string result = a;
+	for (auto c : b) {
+		if (a.find(c) == std::string::npos) {
+			result.push_back(c);
+		}
+	}
+	return result;
+}
+
 struct Line {
 	// Save all options for each character
 	typedef map<char, string> map_type;
 
-	Line() {
-		for (int c = 'a'; c <= 'g'; ++c) {
-			options[c] = "";
-		}
-	}
+	Line() {}
 
 	void addOptions(char c, string possible) {
-		if (options[c].empty()) {
-			for (auto x : possible) {
-				if (options[c].find(x) == std::string::npos) {
-					options[c].push_back(x);
-				}
-			}
-			return;
-		}
+		// if (options.count(c) == 0) {
+		// 	options[c] = possible;
+		// 	return;
+		// }
 
-		for (size_t i = 0; i < options[c].size(); ++i) {
-			char x = options[c][i];
-			size_t pos = possible.find(x);
-			if (pos == std::string::npos) {
-				options[c].erase(i, 1);
-			}
-		}
+		options[c] = intersectStrings(options[c], possible);
 	}
 
 	string generatePossible(int len) {
@@ -84,23 +112,92 @@ struct Line {
 
 		string result;
 		for (auto index : indexes) {
-			for (auto c : signals[index]) {
-				if (result.find(c) == std::string::npos) {
-					result.push_back(c);
-				}
-			}
+			result = addStrings(signals[index], result);
 		}
 		return result;
 	}
 
-	void solve() {
-		for (const auto& input : inputs) {
+	int countAppearances(char c) {
+		int cnt = 0;
+		for (const string& input : inputs) {
+			if (input.find(c) != std::string::npos) {
+				++cnt;
+			}
+		}
+		return cnt;
+	}
+
+	void setAppearances() {
+		for (char c = 'a'; c <= 'g'; ++c) {
+			int cnt = countAppearances(c);
+			options[c] = appearances[cnt];
+		}
+	}
+
+	void removeCharacter(char c, char skip) {
+		for (auto it = options.begin(); it != options.end(); ++it) {
+			if (it->first == skip) {
+				continue;
+			} else if (it->second.find(c) != std::string::npos) {
+				options[it->first].erase(it->second.find(c), 1);
+			}
+		}
+	}
+
+	void finalize() {
+		for (auto it = options.begin(); it != options.end(); ++it) {
+			if (it->second.size() == 1) {
+				removeCharacter(it->second[0], it->first);
+			}
+		}
+	}
+
+	size_t solve() {
+		setAppearances();
+		for (const string& input : inputs) {
 			string possible = generatePossible(input.size());
-			for (auto c : input) {
+			for (char c : input) {
 				addOptions(c, possible);
 			}
 		}
-		printMap();
+		finalize();
+		convertOutput();
+		return stoull(number);
+	}
+
+	string createOutput(const string& output) {
+		string result;
+		for (char c : output) {
+			result.push_back(options[c][0]);
+		}
+		return result;
+	}
+
+	string mapStringToNumber(const string& output) {
+		string real = createOutput(output);
+		size_t num = 0;
+		for (num = 0; num < signals.size(); ++num) {
+			if (real.size() != signals[num].size()) {
+				continue;
+			}
+
+			for (size_t i = 0; i < signals[num].size(); ++i) {
+				if (real.find(signals[num][i]) == std::string::npos) {
+					break;
+				}
+				if (i == signals[num].size() - 1) {
+					return to_string(num);
+				}
+			}
+
+		}
+		return "FAILED";
+	}
+
+	void convertOutput() {
+		for (const string& output : outputs) {
+			number.append(mapStringToNumber(output));
+		}
 	}
 
 	void printMap() {
@@ -110,6 +207,7 @@ struct Line {
 	}
 
 	map_type options;
+	string number;
 	vector<string> inputs;
 	vector<string> outputs;
 };
@@ -128,15 +226,18 @@ int main() {
 		for (size_t i = 0; i < end - 4; ++i) {
 			lines.back().inputs.push_back(v[i]);
 		}
-		lines.back().outputs.push_back(v[end]);
-		lines.back().outputs.push_back(v[end - 1]);
-		lines.back().outputs.push_back(v[end - 2]);
 		lines.back().outputs.push_back(v[end - 3]);
-		break;
+		lines.back().outputs.push_back(v[end - 2]);
+		lines.back().outputs.push_back(v[end - 1]);
+		lines.back().outputs.push_back(v[end]);
 	}
 	file.close();
 
-	lines[0].solve();
+	size_t sum = 0;
+	for (auto& line : lines) {
+		sum += line.solve();
+	}
+	cout << sum << endl;
 
 	return 0;
 }

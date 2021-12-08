@@ -96,10 +96,6 @@ struct Fishies {
 	}
 
 	size_t count() const {
-		// size_t total = 0;
-		// for (auto& f : m) {
-		// 	total += f.second;
-		// }
 		return total;
 	}
 
