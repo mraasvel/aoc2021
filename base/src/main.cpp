@@ -4,6 +4,8 @@ using namespace std;
 
 typedef util::Point<int> Point;
 typedef util::HashPoint<int> HashPoint;
+typedef std::unordered_set<Point, HashPoint> PointSet;
+// typedef std::unordered_map<Point, VALUE, HashPoint> PointHash;
 
 int main(int argc, char *argv[]) {
 	assert(argc != 1);

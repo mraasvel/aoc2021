@@ -9,8 +9,9 @@
 #include <unordered_map>
 #include <set>
 
-#define FILENAME "input.txt"
+// #define FILENAME "input.txt"
 // #define FILENAME "sample.txt"
+#define FILENAME "hard.txt"
 
 using namespace std;
 
@@ -38,30 +39,17 @@ set<Point> fold(Point p, const set<Point>& points) {
 	set<Point> result;
 
 	for (const auto& point: points) {
-		if (p.x != 0) {
-			// fold along vertical line
-			if (p.x < point.x) {
-				Point new_point(point);
-				new_point.x = calculateNewCoord(p.x, point.x);
-				if (new_point.x >= 0) {
-					result.insert(new_point);
-				}
-			} else {
-				result.insert(point);
-			}
-		} else if (p.y != 0) {
-			// fold along horizontal line
-			if (p.y < point.y) {
-				Point new_point(point);
-				new_point.y = calculateNewCoord(p.y, point.y);
-				if (new_point.y >= 0) {
-					result.insert(new_point);
-				}
-			} else {
-				result.insert(point);
+		Point new_point(point);
+		int v1 = (p.x != 0 ? p.x : p.y);
+		int v2 = (p.x != 0 ? point.x : point.y);
+		int& v3 = (p.x != 0 ? new_point.x : new_point.y);
+		if (v1 < v2) {
+			v3 = calculateNewCoord(v1, v2);
+			if (v3 >= 0) {
+				result.insert(new_point);
 			}
 		} else {
-			throw std::runtime_error("invalid fold");
+			result.insert(point);
 		}
 	}
 	return result;
