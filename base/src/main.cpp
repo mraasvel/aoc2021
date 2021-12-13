@@ -1,21 +1,11 @@
-#include "util/util.hpp"
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <cassert>
-#include <cstdio>
-#include <vector>
-#include <algorithm>
-#include <unordered_map>
-
-#define FILENAME "input.txt"
-// #define FILENAME "sample.txt"
+#include "include.hpp"
 
 using namespace std;
 
-int main() {
+typedef util::Point<int> Point;
 
-	std::ifstream file(FILENAME);
+int main(int argc, char *argv[]) {
+	std::ifstream file(argv[1]);
 	assert(file.is_open());
 	std::string line;
 	while (std::getline(file, line)) {

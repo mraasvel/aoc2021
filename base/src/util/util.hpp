@@ -1,3 +1,4 @@
+#include "Point.hpp"
 #include <vector>
 #include <string>
 
