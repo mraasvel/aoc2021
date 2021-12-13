@@ -3,6 +3,7 @@
 using namespace std;
 
 typedef util::Point<int> Point;
+typedef util::HashPoint<int> HashPoint;
 
 int main(int argc, char *argv[]) {
 	std::ifstream file(argv[1]);
@@ -11,6 +12,5 @@ int main(int argc, char *argv[]) {
 	while (std::getline(file, line)) {
 	}
 	file.close();
-
 	return 0;
 }
