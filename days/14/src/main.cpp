@@ -23,17 +23,18 @@ pair<string, string> ruleInsertion(const string& key, char rule) {
 size_t ascii[255];
 
 void add(TemplateMap& temp, const string& key, size_t amount) {
-	// if (temp.count(key) == 0) {
-	// 	temp[key] = 0;
-	// }
-	temp[key] += amount;
+	if (temp.count(key) == 0) {
+		temp[key] = amount;
+	} else {
+		temp[key] += amount;
+	}
 }
 
 TemplateMap pairInsertion(const TemplateMap& temp, const unordered_map<string, char>& rules) {
 	TemplateMap result;
 
 	for (const auto& it : temp) {
-		char rule = rules.find(it.first)->second;
+		char rule = rules.at(it.first);
 		auto p = ruleInsertion(it.first, rule);
 		add(result, p.first, it.second);
 		add(result, p.second, it.second);
@@ -52,7 +53,7 @@ string pairInsertString(string base, const unordered_map<string, char>& rules) {
 			result.push_back(base.back());
 		} else {
 			string key = base.substr(i, 2);
-			char value = rules.find(key)->second;
+			char value = rules.at(key);
 			ascii[(int)value] += 1;
 			result.push_back(key.front());
 			result.push_back(value);
