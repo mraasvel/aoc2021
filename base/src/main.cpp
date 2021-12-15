@@ -2,10 +2,12 @@
 
 using namespace std;
 
-typedef util::Point<int> Point;
-typedef util::HashPoint<int> HashPoint;
+typedef int PointValue;
+
+typedef util::Point<PointValue> Point;
+typedef util::HashPoint<PointValue> HashPoint;
 typedef std::unordered_set<Point, HashPoint> PointSet;
-// typedef std::unordered_map<Point, VALUE, HashPoint> PointHash;
+// typedef std::unordered_map<Point, VALUE, HashPoint> PointHashMap;
 
 int main(int argc, char *argv[]) {
 	assert(argc != 1);
