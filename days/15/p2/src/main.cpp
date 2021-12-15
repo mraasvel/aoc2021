@@ -42,14 +42,17 @@ bool isEnd(Point p, Point end) {
 #define ORIG_HEIGHT 100
 #define EXPANSIONS 50
 
-static const size_t HEIGHT = ORIG_HEIGHT * EXPANSIONS;
+size_t HEIGHT;
 
 size_t calcIndex(Point p) {
 	return p.y * HEIGHT + p.x;
 }
 
 int calcValue(int v) {
-	return (v % 10) + (v / 10);
+	while (v > 9) {
+		v -= 9;
+	}
+	return v;
 }
 
 void insertPositions(vector<int>& grid, vector<int>& min_scores, Point pos, int val, size_t w) {
@@ -95,15 +98,17 @@ int main(int argc, char *argv[]) {
 	vector<int> grid;
 	vector<int> min_scores;
 
-	grid.resize(HEIGHT * HEIGHT);
-	min_scores.resize(HEIGHT * HEIGHT);
-
 	assert(argc != 1);
 	std::ifstream file(argv[1]);
 	assert(file.is_open());
 	std::string line;
 	Point pos(0, 0);
 	while (std::getline(file, line)) {
+		if (grid.size() == 0) {
+			HEIGHT = line.size() * EXPANSIONS;
+			grid.resize(HEIGHT * HEIGHT);
+			min_scores.resize(HEIGHT * HEIGHT);
+		}
 		pos.x = 0;
 		for (auto c : line) {
 			insertPositions(grid, min_scores, pos, c - '0', line.size());
