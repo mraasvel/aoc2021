@@ -49,10 +49,8 @@ size_t calcIndex(Point p) {
 }
 
 int calcValue(int v) {
-	while (v > 9) {
-		v -= 9;
-	}
-	return v;
+	v = v % 9;
+	return v == 0 ? 9 : v;
 }
 
 void insertPositions(vector<int>& grid, vector<int>& min_scores, Point pos, int val, size_t w) {
