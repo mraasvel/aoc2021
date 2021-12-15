@@ -3,8 +3,8 @@
 
 using namespace std;
 
-typedef util::Point<size_t> Point;
-typedef util::HashPoint<size_t> HashPoint;
+typedef util::Point<int> Point;
+typedef util::HashPoint<int> HashPoint;
 typedef std::unordered_set<Point, HashPoint> PointSet;
 typedef std::unordered_map<Point, size_t, HashPoint> PointHash;
 
@@ -52,17 +52,16 @@ struct Data {
 };
 
 bool isValidPoint(Point p, Point end) {
-	return p.x < end.x && p.y < end.y;
+	return p.x < end.x && p.y < end.y && p.x >= 0 && p.y >= 0;
 }
 
 bool isEnd(Point p, Point end) {
 	return p.x == end.x - 1 && p.y == end.y - 1;
 }
 
-size_t dijkstra(const PointHash& grid, PointHash& min_scores, Point end) {
+size_t dijkstraHash(const PointHash& grid, PointHash& min_scores, Point end) {
 	std::priority_queue<Data> pq;
 	pq.push(Data(Point(0, 0), 0));
-	int i = 0;
 	while (!pq.empty()) {
 		auto val = pq.top();
 		pq.pop();
@@ -88,9 +87,59 @@ size_t dijkstra(const PointHash& grid, PointHash& min_scores, Point end) {
 	return 0;
 }
 
+#define HEIGHT 500
+#define ORIG_HEIGHT 100
+
+size_t calcIndex(Point p) {
+	return p.y * HEIGHT + p.x;
+}
+
+void insertPositions(vector<int>& grid, vector<int>& min_scores, Point pos, int val, size_t w) {
+	for (int y = 0; y < 5; ++y) {
+		for (int x = 0; x < 5; ++x) {
+			Point p(pos.x + x * w, pos.y + y * w);
+			size_t index = calcIndex(Point(pos.x + x * w, pos.y + y * w));
+			grid[index] = val + x + y < 10 ? val + x + y : ((val + x + y) % 10) + 1;
+			min_scores[index] = std::numeric_limits<int>::max();
+		}
+	}
+}
+
+int dijkstra(const vector<int>& grid, vector<int>& min_scores, Point end) {
+	std::priority_queue<Data> pq;
+	pq.push(Data(Point(0, 0), 0));
+	while (!pq.empty()) {
+		auto val = pq.top();
+		pq.pop();
+		int score = val.score;
+		if (min_scores[calcIndex(val.p)] < score) {
+			continue;
+		} else if (isEnd(val.p, end)) {
+			return score;
+		}
+		auto adj = getAdjacent(val.p);
+		for (const auto& a : adj) {
+			if (!isValidPoint(a, end)) {
+				continue;
+			}
+			size_t index = calcIndex(a);
+			int ns = val.score + grid[index];
+			if (ns < min_scores[index]) {
+				pq.push(Data(a, ns));
+				min_scores[index] = ns;
+			}
+		}
+	}
+	return 0;
+}
+
 int main(int argc, char *argv[]) {
-	PointHash grid;
-	PointHash min_scores;
+	vector<int> grid;
+	vector<int> min_scores;
+
+	grid.resize(500 * 500);
+	min_scores.resize(500 * 500);
+
 
 
 	assert(argc != 1);
@@ -101,27 +150,18 @@ int main(int argc, char *argv[]) {
 	while (std::getline(file, line)) {
 		pos.x = 0;
 		for (auto c : line) {
-			grid[pos] = (c - '0');
+			insertPositions(grid, min_scores, pos, c - '0', line.size());
 			pos.x += 1;
 		}
 		pos.y += 1;
 	}
 	file.close();
 
-	PointHash new_grid(grid);
-	for (auto it : grid) {
-		auto v = newPoints(it.first, pos.x, pos.y, it.second);
-		min_scores[it.first] = std::numeric_limits<std::size_t>::max();
-		for (auto p : v) {
-			new_grid[p.first] = p.second;
-			min_scores[p.first] = std::numeric_limits<std::size_t>::max();
-		}
-	}
-
 	pos.x *= 5;
 	pos.y *= 5;
 
-	grid[Point(0, 0)] = 0;
-	dijkstra(new_grid, min_scores, pos);
+	cout << pos << endl;
+	grid[0] = 0;
+	cout << dijkstra(grid, min_scores, pos) << endl;
 	return 0;
 }
