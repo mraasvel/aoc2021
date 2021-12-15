@@ -19,26 +19,6 @@ vector<Point> getAdjacent(const Point& p) {
 	return adj;
 }
 
-size_t calculateNewScore(int val) {
-	return val < 10 ? val : val % 10 + 1;
-}
-
-vector<pair<Point, size_t>> newPoints(Point p, size_t w, size_t h, int val) {
-	vector<pair<Point, size_t>> result;
-
-	for (int i = 0; i < 5; ++i) {
-		for (int j = 0; j < 5; ++j) {
-			if (i == 0 && j == 0) {
-				continue;
-			}
-			Point new_pos(p.x + j * w, p.y + i * h);
-			result.push_back(pair<Point, size_t>(new_pos, calculateNewScore(val + i + j)));
-		}
-	}
-
-	return result;
-}
-
 struct Data {
 	Data(Point p, size_t score = std::numeric_limits<size_t>::max())
 	: p(p), score(score) {}
@@ -59,47 +39,25 @@ bool isEnd(Point p, Point end) {
 	return p.x == end.x - 1 && p.y == end.y - 1;
 }
 
-size_t dijkstraHash(const PointHash& grid, PointHash& min_scores, Point end) {
-	std::priority_queue<Data> pq;
-	pq.push(Data(Point(0, 0), 0));
-	while (!pq.empty()) {
-		auto val = pq.top();
-		pq.pop();
-		size_t score = val.score;
-		if (min_scores[val.p] < score) {
-			continue;
-		} else if (isEnd(val.p, end)) {
-			cout << score << endl;
-			return score;
-		}
-		auto adj = getAdjacent(val.p);
-		for (const auto& a : adj) {
-			if (!isValidPoint(a, end)) {
-				continue;
-			}
-			size_t ns = val.score + grid.at(a);
-			if (ns < min_scores[a]) {
-				pq.push(Data(a, ns));
-				min_scores[a] = ns;
-			}
-		}
-	}
-	return 0;
-}
-
-#define HEIGHT 500
 #define ORIG_HEIGHT 100
+#define EXPANSIONS 50
+
+static const size_t HEIGHT = ORIG_HEIGHT * EXPANSIONS;
 
 size_t calcIndex(Point p) {
 	return p.y * HEIGHT + p.x;
 }
 
+int calcValue(int v) {
+	return (v % 10) + (v / 10);
+}
+
 void insertPositions(vector<int>& grid, vector<int>& min_scores, Point pos, int val, size_t w) {
-	for (int y = 0; y < 5; ++y) {
-		for (int x = 0; x < 5; ++x) {
+	for (int y = 0; y < EXPANSIONS; ++y) {
+		for (int x = 0; x < EXPANSIONS; ++x) {
 			Point p(pos.x + x * w, pos.y + y * w);
 			size_t index = calcIndex(Point(pos.x + x * w, pos.y + y * w));
-			grid[index] = val + x + y < 10 ? val + x + y : ((val + x + y) % 10) + 1;
+			grid[index] = calcValue(val + x + y);
 			min_scores[index] = std::numeric_limits<int>::max();
 		}
 	}
@@ -137,10 +95,8 @@ int main(int argc, char *argv[]) {
 	vector<int> grid;
 	vector<int> min_scores;
 
-	grid.resize(500 * 500);
-	min_scores.resize(500 * 500);
-
-
+	grid.resize(HEIGHT * HEIGHT);
+	min_scores.resize(HEIGHT * HEIGHT);
 
 	assert(argc != 1);
 	std::ifstream file(argv[1]);
@@ -157,8 +113,8 @@ int main(int argc, char *argv[]) {
 	}
 	file.close();
 
-	pos.x *= 5;
-	pos.y *= 5;
+	pos.x *= EXPANSIONS;
+	pos.y *= EXPANSIONS;
 
 	cout << pos << endl;
 	grid[0] = 0;
