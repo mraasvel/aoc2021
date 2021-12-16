@@ -194,7 +194,7 @@ int main(int argc, char *argv[]) {
 	file.close();
 
 	Packet packet = parsePacket(binary);
-	cout << packet.value << endl;
-	cout << total_version << endl;
+	cout << "P1: " << total_version << endl;
+	cout << "P2: " << packet.value << endl;
 	return 0;
 }
