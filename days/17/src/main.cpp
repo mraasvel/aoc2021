@@ -63,6 +63,14 @@ int main(int argc, char *argv[]) {
 	);
 	file.close();
 
+/*
+Range explanation:
+
+	If y is less than range_y.first (MIN_Y), it will overshoot the target immmediately, so that's the start
+	If y is more than -(range_y.first) (MAX_Y), it will overshoot the target,
+	since it will have a range_y.first velocity with this starting velocity upon reaching 0, meaning it overshoots the target
+	X starts at 0 because the direction is positive, anything larger than MAX_X will overshoot immediately, everything else will hit the target
+*/
 	int total = 0;
 	for (int y = range_y.first; y < std::abs(range_y.first); ++y) {
 		for (int x = 0; x <= range_x.second; ++x) {
