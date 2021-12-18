@@ -1,5 +1,6 @@
 #include "include.hpp"
 #include "node.hpp"
+#include "timer.hpp"
 
 using namespace std;
 
@@ -164,52 +165,38 @@ NodePointer parseTree(const std::string& line) {
 	return root;
 }
 
-bool scanExplode(NodePointer x, size_t n, bool& exploded) {
-	if (exploded) {
-		return true;
-	}
+bool scanExplode(NodePointer x, size_t n) {
 	if (x->type == Node::PAIR) {
 		if (n >= 4 && !x->left->isPair() && !x->right->isPair()) {
-			exploded = true;
 			x->explode();
 			return true;
 		} else {
-			return scanExplode(x->left, n + 1, exploded)
-				|| scanExplode(x->right, n + 1, exploded);
+			return scanExplode(x->left, n + 1)
+				|| scanExplode(x->right, n + 1);
 		}
 	}
-	return exploded;
+	return false;
 }
 
-bool scanSplit(NodePointer x, bool& found) {
-	if (found) {
-		return true;
-	}
+bool scanSplit(NodePointer x) {
 	if (x->type == Node::PAIR) {
-		return scanSplit(x->left, found)
-			|| scanSplit(x->right, found);
+		return scanSplit(x->left)
+			|| scanSplit(x->right);
 	} else if (x->type == Node::VALUE) {
 		if (x->v >= 10) {
 			x->split();
-			found = true;
 			return true;
 		}
 	}
-	return found;
+	return false;
 }
 
 void reduce(NodePointer root) {
 	while (true) {
-		bool found = false;
-		bool exploded = false;
-		if (scanExplode(root, 0, exploded)) {
-			// cout << "Exploded: ";
-			// root->print();
+		if (scanExplode(root, 0)) {
 			continue;
 		}
-		if (scanSplit(root, found)) {
-			// cout << "Split: ";
-			// root->print();
+		if (scanSplit(root)) {
 			continue;
 		}
 		break;
@@ -221,20 +208,41 @@ void clearTree(NodePointer root) {
 	delete root;
 }
 
-void permute(const vector<string>& snails) {
+size_t PartOne(const vector<string>& lines) {
+	NodePointer root = nullptr;
+	for (const string& line : lines) {
+		root = addPair(root, parseTree(line), nullptr);
+		reduce(root);
+	}
+	size_t amount = root->calcMagnitude();
+	clearTree(root);
+	return amount;
+}
+
+size_t PartTwo(const vector<string>& lines) {
 	size_t amount = 0;
-	for (size_t i = 0; i < snails.size(); i++) {
-		for (size_t j = 0; j < snails.size(); j++) {
+	for (size_t i = 0; i < lines.size(); i++) {
+		for (size_t j = 0; j < lines.size(); j++) {
 			if (j == i) {
 				continue;
 			}
-			NodePointer root = addPair(parseTree(snails[i]), parseTree(snails[j]));
+			NodePointer root = addPair(parseTree(lines[i]), parseTree(lines[j]), nullptr);
 			reduce(root);
 			amount = std::max(amount, root->calcMagnitude());
 			clearTree(root);
 		}
 	}
-	cout << "P2: " <<  amount << endl;
+	return amount;
+}
+
+size_t benchmark(const vector<string>& lines, size_t (*f)(const vector<string>&)) {
+	util::Timer timer;
+	f(lines);
+	timer.reset();
+	size_t result = f(lines);
+	std::cout << "Elapsed: " << timer.elapsed() << endl;
+	std::cout << result << std::endl;
+	return result;
 }
 
 int main(int argc, char *argv[]) {
@@ -242,13 +250,15 @@ int main(int argc, char *argv[]) {
 	std::ifstream file(argv[1]);
 	assert(file.is_open());
 	std::string line;
-	NodePointer root = nullptr;
-
-	vector<string> snails;
+	vector<string> lines;
 	while (std::getline(file, line)) {
-		snails.push_back(line);
+		lines.push_back(line);
 	}
 	file.close();
-	permute(snails);
+
+	std::cout << "-- Part One --" << std::endl;
+	benchmark(lines, PartOne);
+	std::cout << "-- Part Two --" << std::endl;
+	benchmark(lines, PartTwo);
 	return 0;
 }
