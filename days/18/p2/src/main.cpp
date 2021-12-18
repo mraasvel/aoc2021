@@ -247,12 +247,6 @@ int main(int argc, char *argv[]) {
 	vector<string> snails;
 	while (std::getline(file, line)) {
 		snails.push_back(line);
-
-		// NodePointer x = parseTree(line);
-		// root = addPair(root, x, nullptr);
-		// // root->print();
-		// reduce(root);
-		// // root->print();
 	}
 	file.close();
 	permute(snails);
