@@ -93,11 +93,12 @@ int main(int argc, char *argv[]) {
 	std::string line;
 
 	getline(file, line);
-	size_t p1_start = line.back() - '0';
+	size_t p1_start = std::stoi(line.substr(line.rfind(":") + 1));
 	getline(file, line);
-	size_t p2_start = line.back() - '0';
+	size_t p2_start = std::stoi(line.substr(line.rfind(":") + 1));
 	file.close();
 
+	std::cout << p1_start << ", " << p2_start << std::endl;
 	PartTwo(p1_start, p2_start);
 
 	return 0;
