@@ -3,85 +3,63 @@
 
 using namespace std;
 
-size_t actualValue(size_t v, size_t cap) {
-	v = v % cap;
-	if (v == 0) {
-		v = cap;
-	}
-	return v;
-}
+#define WINNING_SCORE 21
 
-struct Player {
-	Player(size_t start, size_t score = 0)
-	: pos(start), score(score) {}
+struct State {
+	State(int p1, int p2)
+	: p1(p1), p2(p2) {}
 
-	Player nextState(int roll) const {
-		size_t pos = actualValue(this->pos + roll, 10);
-		return Player(pos, score + pos);
+	bool operator==(const State& rhs) const {
+		return p1 == rhs.p1 && p2 == rhs.p2;
 	}
 
-	size_t pos, score;
+	int p1;
+	int p2;
 };
 
-struct Game {
-	Game(size_t p1_start, size_t p2_start, size_t num_universes = 1)
-	: p1_turn(true), p1(p1_start), p2(p2_start), num_universes(num_universes) {}
+struct Score {
+	Score(size_t p1 = 0, size_t p2 = 0)
+	: p1(p1), p2(p2) {}
 
-	Game(const Player& p1, const Player& p2, size_t n, bool p1_turn)
-	: p1_turn(p1_turn), p1(p1), p2(p2), num_universes(n) {}
-
-	Game nextState(int roll) const {
-		// Number of possibilities for (3, 4, 5, 6, 7, 8, 9) rolls
-		static const int probabilities[] = {
-			1, 3, 6, 7, 6, 3, 1
-		};
-
-		if (p1_turn) {
-			return Game(p1.nextState(roll), p2, num_universes * probabilities[roll - 3], !p1_turn);
-		} else {
-			return Game(p1, p2.nextState(roll), num_universes * probabilities[roll - 3], !p1_turn);
-		}
+	bool playerOneWon() const {
+		return p1 > p2;
 	}
 
 	bool isOver() const {
-		return p1.score >= 21 || p2.score >= 21;
+		return p1 >= WINNING_SCORE || p2 >= WINNING_SCORE;
 	}
 
-	bool p1Won() const {
-		return p1.score > p2.score;
-	}
-
-	bool p1_turn;
-	Player p1, p2;
-	size_t num_universes;
+	size_t p1;
+	size_t p2;
 };
 
-void PartTwo(size_t p1_start, size_t p2_start) {
-	std::stack<Game> states;
-	states.push(Game(p1_start, p2_start));
+struct GameData {
+	GameData() {}
+	GameData(size_t cnt)
+	: universe_count(cnt) {}
 
-	size_t p1_wins = 0;
-	size_t p2_wins = 0;
-	while (!states.empty()) {
-		Game state = states.top();
-		states.pop();
-		for (int roll = 3; roll <= 9; roll++) {
-			Game next = state.nextState(roll);
-			if (next.isOver()) {
-				if (next.p1Won()) {
-					p1_wins += next.num_universes;
-				} else {
-					p2_wins += next.num_universes;
-				}
-			} else {
-				states.push(next);
-			}
-		}
+	GameData(size_t cnt, const std::vector<Score>& scores)
+	: universe_count(cnt), scores(scores) {}
+	size_t universe_count;
+	std::vector<Score> scores;
+};
+
+// doesn't work cuz a state is uniquely identified by pos + scores
+struct HashState {
+	size_t operator()(const State& s) const {
+		return util::HashPoint<int>()(util::Point<int>(s.p1, s.p2));
 	}
-	if (p1_wins > p2_wins) {
-		std::cout << "Player One: " << p1_wins << std::endl;
-	} else {
-		std::cout << "Player Two: " << p2_wins << std::endl;
+};
+
+typedef std::unordered_map<State, GameData, HashState> StateHash;
+
+void simulate(State start) {
+	StateHash DP = {
+		{start, GameData(1, {Score(0, 0)})}
+	};
+	while (!DP.empty()) {
+		next.swap(DP);
+		next.clear();
 	}
 }
 
@@ -93,13 +71,12 @@ int main(int argc, char *argv[]) {
 	std::string line;
 
 	getline(file, line);
-	size_t p1_start = std::stoi(line.substr(line.rfind(":") + 1));
+	size_t p1 = std::stoi(line.substr(line.rfind(":") + 1));
 	getline(file, line);
-	size_t p2_start = std::stoi(line.substr(line.rfind(":") + 1));
+	size_t p2 = std::stoi(line.substr(line.rfind(":") + 1));
 	file.close();
 
-	std::cout << p1_start << ", " << p2_start << std::endl;
-	PartTwo(p1_start, p2_start);
-
+	std::cout << p1 << ", " << p2 << std::endl;
+	simulate(State(p1, p2));
 	return 0;
 }
