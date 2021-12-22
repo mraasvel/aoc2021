@@ -13,9 +13,9 @@ typedef pair<PointValue, PointValue> Range;
 
 struct Cube {
 	Cube()
-	: active(false) {}
+	: active(true) {}
 	Cube(Range x, Range y, Range z)
-	: x(x), y(y), z(z), active(false) {}
+	: x(x), y(y), z(z), active(true) {}
 	Range x, y, z;
 
 	void print() const {
@@ -121,6 +121,21 @@ void intersectCube(const Cube& a, std::vector<Cube>& cubes) {
 	}
 }
 
+void intersectCubeFast(const Cube& a, std::vector<Cube>& cubes) {
+	size_t i = 0;
+	while (i < cubes.size()) {
+		if (cubes[i].active && cubeIntersects(a, cubes[i])) {
+			Cube subcube = computeSubCube(a, cubes[i]);
+			std::vector<Cube> new_cubes = splitCube(cubes[i], subcube);
+			cubes[i].active = false;
+			for (const Cube& nc : new_cubes) {
+				cubes.push_back(nc);
+			}
+		}
+		i++;
+	}
+}
+
 int main(int argc, char *argv[]) {
 	assert(argc != 1);
 	std::ifstream file(argv[1]);
@@ -135,16 +150,18 @@ int main(int argc, char *argv[]) {
 		cube.x = parseRange(line, "x=");
 		cube.y = parseRange(line, "y=");
 		cube.z = parseRange(line, "z=");
-		intersectCube(cube, cubes);
+		intersectCubeFast(cube, cubes);
 		if (line.find("on") == 0) {
 			cubes.push_back(cube);
 		}
 	}
 	file.close();
-	cout << cubes.size() << endl;
+	cout << "Total cubes: " << cubes.size() << endl;
 	size_t total = 0;
 	for (const Cube& cube : cubes) {
-		total += cube.area();
+		if (cube.active) {
+			total += cube.area();
+		}
 	}
 	cout << "Total: " << total << endl;
 	return 0;
