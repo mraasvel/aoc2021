@@ -184,11 +184,17 @@ struct State {
 		mincost += computeMinRowMovement();
 	}
 
-	long computeMinRowMovement() {
-		for (size_t y = 2; y < HEIGHT - 1; y++) {
-
+	size_t computeMinRowMovement() const {
+		size_t cost = 0;
+		for (long x = 3; x < 10; x += 2) {
+			char c = 'A' + (x - 3) / 2;
+			for (size_t y = 3; y < HEIGHT - 1; y++) {
+				if (get(x, y) != c) {
+					cost += move_costs[c] * (y - 2);
+				}
+			}
 		}
-		return 0;
+		return cost;
 	}
 
 	void print() const {
