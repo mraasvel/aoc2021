@@ -62,15 +62,28 @@ struct Amphibian {
 
 struct State {
 	State(size_t cost = 0)
-	: cost(cost) {}
+	: cost(cost), prev(nullptr) {}
 
 	size_t cost;
+	size_t mincost;
 	vector<vector<Square>> grid;
 	Room rooms[4];
 	vector<Amphibian> amphs;
+	State* prev;
+
+	bool operator==(const State& rhs) const {
+		for (size_t y = 0; y < grid.size(); y++) {
+			for (size_t x = 0; x < grid[y].size(); x++) {
+				if (grid[y][x].c != rhs.grid[y][x].c) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
 
 	bool operator<(const State& rhs) const {
-		return cost > rhs.cost;
+		return mincost > rhs.mincost;
 	}
 
 	vector<State> expand() {
@@ -82,7 +95,7 @@ struct State {
 			if (moveIntoRoom(a, expansions)) {
 				continue;
 			}
-			if (a.moved) {
+			if (!inRoom(a)) {
 				continue;
 			}
 			a.moved = true;
@@ -91,6 +104,10 @@ struct State {
 			a.moved = false;
 			get(a.p).set(a.c);
 		}
+		// for (const auto& exp : expansions) {
+		// 	exp.print();
+		// }
+		// exit(0);
 		return expansions;
 	}
 
@@ -130,7 +147,8 @@ struct State {
 	}
 
 	bool canMoveIntoRoom(const Amphibian& a, size_t index, size_t& steps) {
-		if (get(rooms[index].p1).c != '.' || get(rooms[index].p2).c != a.c) {
+		if (!(rooms[index].isFull(grid, '.')
+			|| (get(rooms[index].p1).c == '.' && get(rooms[index].p2).c == a.c))) {
 			return false;
 		}
 		Point pos(a.p);
@@ -163,17 +181,34 @@ struct State {
 		return get(p).c == '.';
 	}
 
-	State createExpansion(Amphibian& a, Point target, size_t move_cost) const {
+	void computeMinCost() {
+		mincost = cost;
+		for (const auto& amph: amphs) {
+			Point target = rooms[target_room[amph.c]].p1;
+			if (amph.p.x != target.x) {
+				long dist = std::abs(amph.p.x - target.x) + amph.p.y;
+				mincost += dist * move_costs[amph.c];
+			}
+		}
+	}
+
+	State createExpansion(Amphibian& a, Point target, size_t move_cost) {
 		Point orig = a.p;
 		a.p = target;
 		State new_state(*this);
 		a.p = orig;
 		new_state.get(target).set(a.c);
 		new_state.cost = move_cost;
+		new_state.computeMinCost();
+#ifdef HISTORY
+		get(a.p).set(a.c);
+		new_state.prev = new State(*this);
+		get(a.p).clear();
+#endif
 		return new_state;
 	}
 
-	void moveAmphibian(Amphibian& a, vector<State>& expansions) const {
+	void moveAmphibian(Amphibian& a, vector<State>& expansions) {
 		auto adj = util::getEdgeAdjacentPoints(a.p);
 		PointSet explored;
 		std::queue<pair<Point, size_t>> to_explore;
@@ -213,15 +248,16 @@ struct State {
 
 	void initRooms() {
 		size_t index = 0;
-		for (size_t i = 0; i < grid[2].size(); i++) {
-			if (isalpha(grid[2][i].c)) {
-				forbidden.insert(Point(i, 1));
-				rooms[index].p1 = Point(i, 2);
-				rooms[index].p2 = Point(i, 3);
-				amphs.push_back(Amphibian(grid[2][i].c, Point(i, 2)));
-				amphs.push_back(Amphibian(grid[3][i].c, Point(i, 3)));
-				index++;
+		forEach([this](Point p) {
+			if (isalpha(this->get(p).c)) {
+				amphs.push_back(Amphibian(this->get(p).c, p));
 			}
+		});
+
+		for (int i = 0; i < 4; i++) {
+			forbidden.insert(Point(3 + i * 2, 1));
+			rooms[i].p1 = Point(3 + i * 2, 2);
+			rooms[i].p2 = Point(3 + i * 2, 3);
 		}
 	}
 
@@ -252,39 +288,74 @@ struct State {
 	}
 
 	void print() const {
+		cout << "Score: " << cost << endl;
 		forEach([this](Point p) -> void {
 			cout << get(p).c;
 			if ((size_t)(p.x + 1) == this->grid[p.y].size()) {
 				cout << endl;
 			}
 		});
+		cout << endl;
 	}
 };
 
+struct HashState {
+	size_t operator()(const State& x) const {
+		size_t hash = 0;
+		for (const auto& amph : x.amphs) {
+			hash ^= HashPoint()(amph.p);
+		}
+		return hash;
+	}
+};
+
+unordered_map<State, size_t, HashState> found_states;
+
 bool isGoalState(const State& state) {
 	return state.isGoal();
+}
+
+void printPreviousStates(const State& state) {
+	if (state.prev == nullptr) {
+		state.print();
+	} else {
+		printPreviousStates(*state.prev);
+		state.print();
+	}
+}
+
+void saveState(const State& x) {
+	found_states[x] = x.mincost;
 }
 
 size_t solve(const State& initial) {
 	std::priority_queue<State> states;
 	states.push(initial);
 	size_t min_cost = std::numeric_limits<size_t>::max();
-		static int i = 0;
 	while (!states.empty()) {
 		State state = states.top();
 		states.pop();
+		if (state.mincost > found_states[state]) {
+			continue;
+		}
 		if (isGoalState(state)) {
-			cout << "Goal State" << ": " << state.cost << endl;
-			state.print();
+			cout << "Goal State" << endl;
+			printPreviousStates(state);
 			min_cost = std::min(min_cost, state.cost);
 			exit(0);
 			continue;
 		}
 		vector<State> expansions = state.expand();
 		for (const State& x : expansions) {
+			if (found_states.count(x) > 0) {
+				if (x.mincost >= found_states[x]) {
+					continue;
+				}
+			}
 			states.push(x);
+			saveState(x);
 		}
-		cout << "States: " << states.size() << endl;
+		cout << state.mincost << endl;
 	}
 	return min_cost;
 }
@@ -315,6 +386,8 @@ int main(int argc, char *argv[]) {
 	}
 	initial_state.print();
 	initial_state.initRooms();
+	initial_state.computeMinCost();
+	found_states[initial_state] = initial_state.mincost;
 	size_t result = solve(initial_state);
 	cout << "P1: " << result << endl;
 	return 0;
