@@ -16,7 +16,7 @@ struct State;
 void printHistory(const State& s);
 
 #define WIDTH 13
-#define HEIGHT 7
+#define HEIGHT 5
 #define HISTORY
 
 size_t getIndex(Point p) {

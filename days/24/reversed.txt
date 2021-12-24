@@ -1,0 +1,48 @@
+z.push(A + 8);
+z.push(B + 16);
+z.push(C + 4);
+
+if (D != (z.pop() - 11)) {
+	z.push(D + 1);
+}
+
+z.push(E + 13);
+z.push(F + 5);
+z.push(G);
+
+if (H != z.pop() - 5) {
+	z.push(H + 10);
+}
+
+z.push(I + 7);
+
+if (J != z.pop()) {
+	z.push(J + 2);
+}
+
+if (K != z.pop() - 11) {
+	z.push(K + 13)
+}
+
+if (L != z.pop() - 13) {
+	z.push(L + 15);
+}
+
+if (M != z.pop() - 13) {
+	z.push(M + 14)
+}
+
+if (N != z.pop() - 11) {
+	z.push(N + 9);
+}
+
+D == C - 7	: D = 2, C = 9
+H == G - 5	: H = 4, G = 9
+J == I + 7	: J = 9, I = 2
+K == F - 6	: K = 3, F = 9
+L == E		: L = 9, E = 9
+M == B + 3	: M = 9, B = 6
+N == A - 3	: N = 6, A = 9
+
+96929994293996
+ABCDEFGHIJKLMN
