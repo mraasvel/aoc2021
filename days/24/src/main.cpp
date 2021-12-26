@@ -49,23 +49,25 @@ struct Range {
 	int min, max;
 };
 
-// pair<TOP, CURRENT>
+/*
+If the delta == 3
+A = B + 3
+Then A can be at most 6 (9 - 3)
+And B has to be at minimum 4 (1 + 3)
+Inverted for negative sums
+*/
 std::pair<Range, Range> calculateRanges(int x, int top) {
-// TOP == CURRENT - (x + top)
-// CURRENT == TOP + (x + top)
-	int sum = x + top;
 	std::pair<Range, Range> result(Range(10, 0), Range(10, 0));
-	for (int i = 1; i <= 9; i++) {
-		if (i + sum <= 9 && i + sum >= 1) {
-			result.first.min = std::min(result.first.min, i);
-			result.first.max = std::max(result.first.min, i);
-		}
-		if (i - sum <= 9 && i - sum >= 1) {
-			result.second.min = std::min(result.second.min, i);
-			result.second.max = std::max(result.second.min, i);
-		}
+	int sum = x + top;
+	result.first.min = 1;
+	result.first.max = 9 - std::abs(sum);
+	result.second.min = 1 + std::abs(sum);
+	result.second.max = 9;
+	if (sum < 0) {
+		return std::pair<Range, Range>(result.second, result.first);
+	} else {
+		return result;
 	}
-	return result;
 }
 
 bool canSolve(int x, int top) {
@@ -86,10 +88,10 @@ std::vector<Range> generateRanges(const std::vector<InputType>& inputs) {
 			ranges[i] = result.second;
 			stack.pop();
 		} else {
-			std::cout << "Push: " << i << std::endl;
 			stack.push(OutputType(input.y, i));
 		}
 	}
+	std::cout << "Ranges" << std::endl;
 	for (std::size_t i = 0; i < ranges.size(); i++) {
 		std::cout << char('A' + i) << ": " << ranges[i].min << " -> " << ranges[i].max << std::endl;
 	}
