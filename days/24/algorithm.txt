@@ -1,0 +1,9 @@
+executeStep(int x, int y, stack) {
+	W = input()
+	if (W != stack.top() + x) {
+		stack.push(W + y)
+	}
+}
+
+AIM: the if condition should be true: so we can determine the min/max value of the input for this condition to be true using the range.
+Output: the new stack state: the value type is a RANGE of possible values
